@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🎯 Gamified Learning</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(#ffadad, #ffd6a5, #fdffb6, #caffbf, #9bf6ff, #a0c4ff, #bdb2ff, #ffc6ff);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .container {
+    background: white;
+    border-radius: 25px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    width: 90%;
+    max-width: 600px;
+    text-align: center;
+    padding: 40px;
+    animation: fadeIn 0.8s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  h1 {
+    color: #3f51b5;
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+
+  .menu {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+
+  .btn {
+    padding: 15px;
+    font-size: 18px;
+    border-radius: 15px;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.3s;
+  }
+
+  .btn:hover { transform: scale(1.05); }
+
+  .add { background: #4CAF50; }
+  .sub { background: #E91E63; }
+  .mul { background: #FF9800; }
+  .div { background: #2196F3; }
+
+  #gameArea { display: none; }
+
+  input {
+    font-size: 18px;
+    padding: 8px;
+    width: 140px;
+    border-radius: 10px;
+    border: 2px solid #3f51b5;
+    text-align: center;
+    outline: none;
+    margin-top: 15px;
+  }
+
+  .submit-btn, .next-btn, .back-btn {
+    margin-top: 20px;
+    padding: 10px 25px;
+    font-size: 16px;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    color: white;
+  }
+
+  .submit-btn { background: #4CAF50; }
+  .next-btn { background: #FF9800; display: none; }
+  .back-btn { background: #9C27B0; }
+
+  .result {
+    margin-top: 15px;
+    font-weight: bold;
+    min-height: 24px;
+  }
+
+  .images { font-size: 32px; margin: 15px 0; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div id="mainMenu">
+    <h1>🎯 Gamified Learning</h1>
+    <div class="menu">
+      <button class="btn add" onclick="startGame('addition')">➕ Addition</button>
+      <button class="btn sub" onclick="startGame('subtraction')">➖ Subtraction</button>
+      <button class="btn mul" onclick="startGame('multiplication')">✖️ Multiplication</button>
+      <button class="btn div" onclick="startGame('division')">➗ Division</button>
+    </div>
+  </div>
+
+  <div id="gameArea">
+    <h1 id="gameTitle"></h1>
+    <p class="score-board">Score: <span id="score">0</span> 🌟</p>
+    <p id="question"></p>
+    <div id="objectDisplay" class="images"></div>
+    <input type="number" id="answer" placeholder="Enter your answer" />
+    <br>
+    <button class="submit-btn" id="submitBtn" onclick="checkAnswer()">✅ Submit</button>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">🔄 Next</button>
+    <button class="back-btn" onclick="goBack()">⬅ Back</button>
+    <p id="result" class="result"></p>
+  </div>
+</div>
+
+<script>
+const objects = [
+      { emoji: "🍎", name: "apple" },
+      { emoji: "🍌", name: "banana" },
+      { emoji: "🎈", name: "balloon" },
+      { emoji: "🚗", name: "car" },
+      { emoji: "🍓", name: "strawberry" },
+      { emoji: "🐠", name: "fish" },
+      { emoji: "🏀", name: "ball" },
+      { emoji: "🧁", name: "cupcake" },
+      { emoji: "🌟", name: "star" },
+      { emoji: "🐱", name: "cat" },
+      { emoji: "🐶", name: "dog" },
+      { emoji: "🚀", name: "rocket" },
+      {emoji: "🌈", name: "rainbow" },
+      { emoji: "🍕", name: "pizza" },
+      { emoji: "📚", name: "book" },
+      {emoji: "🍇", name: "grape" },
+      { emoji: "🌻", name: "sunflower" },
+      { emoji: "🍉", name: "watermelon" },
+      { emoji: "🦋", name: "butterfly" },
+      { emoji: "🍭", name: "lollipop" },
+      { emoji: "🎂", name: "cake" },
+      { emoji: "🍩", name: "donut" },
+      { emoji: "🍔", name: "burger"},
+      { emoji: "🍦", name: "ice cream" },
+      {emoji: "🐼", name: "panda" },
+      { emoji: "🌺", name: "hibiscus" }
+];
+
+let num1, num2, operation, score = 0, selectedObject;
+
+function startGame(op) {
+  operation = op;
+  document.getElementById("mainMenu").style.display = "none";
+  document.getElementById("gameArea").style.display = "block";
+
+  document.getElementById("gameTitle").textContent =
+    (op === "addition" ? "➕ Addition Game" :
+     op === "subtraction" ? "➖ Subtraction Game" :
+     op === "multiplication" ? "✖️ Multiplication Game" :
+     "➗ Division Game");
+
+  score = 0;
+  document.getElementById("score").textContent = score;
+  nextQuestion();
+}
+
+function nextQuestion() {
+  selectedObject = objects[Math.floor(Math.random() * objects.length)];
+  num1 = Math.floor(Math.random() * 8) + 2;
+  num2 = Math.floor(Math.random() * 8) + 2;
+  if (operation === "subtraction" && num2 > num1) [num1, num2] = [num2, num1];
+  if (operation === "division") num1 = num2 * (Math.floor(Math.random() * 6) + 1);
+
+  let question = "";
+  let display = "";
+
+  if (operation === "addition") {
+    question = `If you have ${num1} ${selectedObject.name}s and get ${num2} more, how many ${selectedObject.name}s do you have now?`;
+    display = selectedObject.emoji.repeat(num1) + " ➕ " + selectedObject.emoji.repeat(num2);
+  } else if (operation === "subtraction") {
+    question = `If you have ${num1} ${selectedObject.name}s and give away ${num2}, how many ${selectedObject.name}s remain?`;
+    display = selectedObject.emoji.repeat(num1) + " ➖ " + selectedObject.emoji.repeat(num2);
+  } else if (operation === "multiplication") {
+    question = `If there are ${num1} groups of ${num2} ${selectedObject.name}s, how many in total?`;
+    for (let i = 0; i < num1; i++) display += selectedObject.emoji.repeat(num2) + "<br>";
+  } else {
+    question = `If ${num1} ${selectedObject.name}s are divided equally among ${num2} friends, how many does each get?`;
+    display = selectedObject.emoji.repeat(num1) + " ➗ " + selectedObject.emoji.repeat(num2);
+  }
+
+  document.getElementById("question").innerHTML = question;
+  document.getElementById("objectDisplay").innerHTML = display;
+  document.getElementById("result").textContent = "";
+  document.getElementById("answer").value = "";
+  document.getElementById("submitBtn").style.display = "inline-block";
+  document.getElementById("nextBtn").style.display = "none";
+}
+
+function checkAnswer() {
+  const ans = parseInt(document.getElementById("answer").value);
+  let correct = 0;
+
+  if (operation === "addition") correct = num1 + num2;
+  else if (operation === "subtraction") correct = num1 - num2;
+  else if (operation === "multiplication") correct = num1 * num2;
+  else correct = num1 / num2;
+
+  const result = document.getElementById("result");
+  if (ans === correct) {
+    result.textContent = "🎉 Correct!";
+    result.style.color = "green";
+    score++;
+  } else {
+    result.textContent = `😢 Oops! The correct answer was ${correct}.`;
+    result.style.color = "red";
+  }
+  document.getElementById("score").textContent = score;
+  document.getElementById("submitBtn").style.display = "none";
+  document.getElementById("nextBtn").style.display = "inline-block";
+}
+
+function goBack() {
+  document.getElementById("mainMenu").style.display = "block";
+  document.getElementById("gameArea").style.display = "none";
+}
+</script>
+</body>
+</html>
